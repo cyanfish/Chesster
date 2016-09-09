@@ -1,21 +1,24 @@
 // extlibs
-var fs = require('fs');
-var moment = require('moment');
-var Q = require("q");
-var _ = require("lodash");
-var winston = require("winston");
+const fs = require('fs');
+const moment = require('moment');
+const Q = require("q");
+const _ = require("lodash");
+const winston = require("winston");
+const Cleverbot = require('cleverbot-node');
+cleverbot = new Cleverbot;
+const G = require('gizoogle');
 
 // Our stuff
-var fuzzy = require('./fuzzy_match.js');
-var gamelinks = require('./gamelinks.js');
-var results = require('./results.js');
-var heltour = require('./heltour.js');
-var http = require("./http.js");
-var league = require("./league.js");
-var lichess = require('./lichess.js');
-var scheduling = require('./scheduling.js');
-var slack = require('./slack.js');
-var subscription = require('./subscription.js');
+const fuzzy = require('./fuzzy_match.js');
+const gamelinks = require('./gamelinks.js');
+const results = require('./results.js');
+const heltour = require('./heltour.js');
+const http = require("./http.js");
+const league = require("./league.js");
+const lichess = require('./lichess.js');
+const scheduling = require('./scheduling.js');
+const slack = require('./slack.js');
+const subscription = require('./subscription.js');
 
 var users = slack.users;
 var channels = slack.channels;
@@ -143,6 +146,42 @@ function(bot, message) {
     }).catch(function(error){
         winston.error("[NOMINATION] private link acquisition failure: {}".format(error));
         bot.reply(message, "I failed to get your private link. Please ask @endrawes0 for help.");
+    });
+});
+
+chesster.hears({
+    middleware: [ ],
+    patterns: [ 'say' ],
+    messageTypes: [ 'direct_message' ]
+},
+function(bot, message) {
+    var args = message.text.split(' ');
+    var channel = args[1];
+    var to = args[2];
+    var say = args.slice(3).join(' ');
+	// To translate a string
+	G.string(say, function(error, translation) {
+        bot.reply(message, "{} - {}: {}".format(channel, to, translation));
+        //chesster.directbot.postMessageToChannel(channel, '{}: {}'.format(to, english_result));
+	});
+});
+
+/* game say */
+chesster.hears({
+    middleware: [ ],
+    patterns: [ 'respond' ],
+    messageTypes: [ 'direct_message' ]
+},
+function(bot, message) {
+    var args = message.text.split(' ').slice(1).join(' ');
+    //bot.reply(message, "Incoming: {}".format(args));
+    Cleverbot.prepare(function(){
+        cleverbot.write(args, function (response) {
+            //bot.reply(message, "{}".format(response.message));
+			G.string(response.message, function(error, translation) {
+				bot.reply(message, "{}".format(translation));
+			});
+        });
     });
 });
 

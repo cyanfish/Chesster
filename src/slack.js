@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 var Q = require("q");
 var Botkit = require('botkit');
+const SlackBot = require('slackbots');
 var _ = require("lodash");
 var league = require("./league.js");
 var fuzzy = require("./fuzzy_match.js");
@@ -437,6 +438,13 @@ function Bot(options) {
       token: self.config.token
     }).startRTM(function(err, bot) {
         // Store a reference to the bot so that we can use it later.
+
+		self.directbot = new SlackBot({
+			token: self.config.token,
+			name: 'modster2'
+		});
+        self.directbot.on('start', function() {
+        });
         self.bot = bot;
         if (err) {
             throw new Error(err);
@@ -455,7 +463,7 @@ function Bot(options) {
     // setup logging
     // Only log to slack if the token is set.
     if (self.config.winston.token) {
-        winston.add(logging.Slack, self.config.winston);
+        //winston.add(logging.Slack, self.config.winston);
     }
 
     self.hears = hears;
